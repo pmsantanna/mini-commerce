@@ -6,9 +6,11 @@ import com.minicommerce.model.OrderItem;
 import com.minicommerce.model.Product;
 import com.minicommerce.repository.OrderRepository;
 import com.minicommerce.repository.ProductRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -18,54 +20,30 @@ import java.util.stream.Collectors;
 @CrossOrigin(origins = "*")
 public class OrderController {
 
-    private final OrderRepository orderRepo;
-    private final ProductRepository productRepo;
+    @Autowired
+    private OrderRepository orderRepo;
 
-    public OrderController(OrderRepository orderRepo, ProductRepository productRepo) {
-        this.orderRepo = orderRepo;
-        this.productRepo = productRepo;
+    @PostMapping
+    public Order create(@RequestBody Order order) {
+        order.setCreatedAt(LocalDateTime.now());
+        return orderRepo.save(order);
     }
 
     @GetMapping
-    public List<Order> findAll() {
-        return orderRepo.findAll();
+    public List<OrderResponse> list() {
+        return orderRepo.findAll().stream().map(OrderResponse::from).toList();
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<Order> findById(@PathVariable Long id) {
-        return orderRepo.findById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    // DTO interno
+    record OrderResponse(Long id, String date, List<ProductInfo> products) {
+        static OrderResponse from(Order order) {
+            return new OrderResponse(
+                    order.getId(),
+                    order.getCreatedAt().toLocalDate().toString(),
+                    order.getProducts().stream().map(p -> new ProductInfo(p.getName(), p.getPrice())).toList()
+            );
+        }
     }
 
-    @PostMapping
-    public ResponseEntity<Order> create(@RequestBody OrderRequestDTO dto) {
-        Order order = new Order();
-        order.setCustomerName(dto.customerName);
-        order.setCustomerEmail(dto.customerEmail);
-
-        List<OrderItem> items = dto.items.stream().map(itemDto -> {
-            Optional<Product> productOpt = productRepo.findById(itemDto.productId);
-            if (productOpt.isEmpty()) {
-                throw new RuntimeException("Produto não encontrado: ID " + itemDto.productId);
-            }
-
-            Product product = productOpt.get();
-
-            OrderItem item = new OrderItem();
-            item.setProduct(product);
-            item.setQuantity(itemDto.quantity);
-            item.setPrice(product.getPrice());
-            item.setOrder(order); // associa ao pedido
-
-            return item;
-        }).collect(Collectors.toList());
-
-        double total = items.stream().mapToDouble(i -> i.getPrice() * i.getQuantity()).sum();
-        order.setTotal(total);
-        order.setItems(items);
-
-        Order saved = orderRepo.save(order);
-        return ResponseEntity.ok(saved);
-    }
+    record ProductInfo(String name, double price) {}
 }

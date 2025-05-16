@@ -8,7 +8,7 @@ import java.util.Date;
 @Component
 public class JwtUtil {
 
-    private final String secret = "minicommerce-secret-key";
+    private final String secret = "P5TjqyH6DUuYnX8CrGpHvXbUnTAA1kUy4kW9RBFWKr8=";
     private final long expirationMs = 86400000; // 24h
 
     public String generateToken(String email) {
@@ -16,7 +16,7 @@ public class JwtUtil {
                 .setSubject(email)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + expirationMs))
-                .signWith(SignatureAlgorithm.HS512, secret)
+                .signWith(SignatureAlgorithm.HS256, secret)
                 .compact();
     }
 

@@ -3,32 +3,20 @@ package com.minicommerce.model;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "`order`")
 public class Order {
-
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue
     private Long id;
 
-    private String customerName;
-    private String customerEmail;
+    private LocalDateTime createdAt = LocalDateTime.now();
 
-    private LocalDateTime createdAt;
+    @ManyToMany
+    private List<Product> products = new ArrayList<>();
 
-    private double total;
-
-    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
-    private List<OrderItem> items;
-
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
-    }
-
-    // Getters e Setters
     public Long getId() {
         return id;
     }
@@ -37,39 +25,19 @@ public class Order {
         this.id = id;
     }
 
-    public String getCustomerName() {
-        return customerName;
-    }
-
-    public void setCustomerName(String customerName) {
-        this.customerName = customerName;
-    }
-
-    public String getCustomerEmail() {
-        return customerEmail;
-    }
-
-    public void setCustomerEmail(String customerEmail) {
-        this.customerEmail = customerEmail;
-    }
-
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
 
-    public List<OrderItem> getItems() {
-        return items;
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
     }
 
-    public void setItems(List<OrderItem> items) {
-        this.items = items;
+    public List<Product> getProducts() {
+        return products;
     }
 
-    public double getTotal() {
-        return total;
-    }
-
-    public void setTotal(double total) {
-        this.total = total;
+    public void setProducts(List<Product> products) {
+        this.products = products;
     }
 }
